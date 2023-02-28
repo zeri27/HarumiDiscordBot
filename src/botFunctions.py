@@ -1,3 +1,4 @@
+import asyncio
 import random
 import discord
 from googletrans import Translator
@@ -62,8 +63,21 @@ def helpFunction():
                     value="You receive a random quote", inline=False)
     embed.add_field(name="!translate",
                     value="I translate the message to English :)", inline=False)
+    embed.add_field(name="!poll",
+                    value="I create a simple Yes or No poll which lasts for 10 minutes", inline=False)
     embed.set_image(url="https://pbs.twimg.com/profile_images/1498079070227099649/-2NWkrq3_400x400.jpg")
     return embed
+
+
+async def translateFunction(message):
+    if message.reference:
+        try:
+            replied_message = await message.channel.fetch_message(message.reference.message_id)
+            await message.reply(embed=translateToEnglish(replied_message.content))
+        except discord.errors.NotFound:
+            await message.reply("The replied message could not be found.")
+    else:
+        await message.reply("Please reply to a message to translate it.")
 
 
 def translateToEnglish(text):
@@ -74,3 +88,41 @@ def translateToEnglish(text):
     embed.add_field(name="Translated Text:",
                     value=translation.text, inline=False)
     return embed
+
+
+def pollEmbed(text):
+    embed = discord.Embed(title="Harumi's Poll", description=text, color=colors['blue'])
+    return embed
+
+
+def pollResults(question, ticks, cross):
+    description = '\n' + question + '\n\n**Yes** votes: ' + str(ticks) + '\n**No** votes: ' + str(cross)
+    embed = discord.Embed(title="Harumi's Poll Results", description=description, color=colors['orange'])
+    return embed
+
+
+async def pollFunction(message):
+    poll_question = message.content.split('!poll ')[1]
+    poll = await message.reply(embed=pollEmbed(poll_question))
+    message = poll
+    # Add tick and cross reactions
+    await message.add_reaction('✅')
+    await message.add_reaction('❌')
+
+    # Wait for 5 minutes
+    await asyncio.sleep(8)
+
+    # Get updated message with vote counts
+    message = await message.channel.fetch_message(poll.id)
+
+    # Get vote counts
+    tick_count = 0
+    cross_count = 0
+    for reaction in message.reactions:
+        if reaction.emoji == '✅':
+            tick_count = reaction.count - 1  # Subtract the bot's reaction
+        elif reaction.emoji == '❌':
+            cross_count = reaction.count - 1  # Subtract the bot's reaction
+
+    # Send poll results
+    await message.reply(embed=pollResults(poll_question, tick_count, cross_count))

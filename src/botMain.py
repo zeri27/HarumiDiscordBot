@@ -4,7 +4,7 @@ import discord
 from discord import Game, Status
 
 import config
-from src.botFunctions import helpFunction, randomFact, randomQuote, translateToEnglish
+from src.botFunctions import helpFunction, randomFact, randomQuote, pollFunction, translateFunction
 
 TOKEN = config.TOKEN
 
@@ -43,14 +43,9 @@ async def on_message(message):
             # Translate Function: Bot translates the message that's been replied to and returns output in English
             # Any language -> English (uses Google Translator API)
             elif msg.__eq__('!translate'):
-                if message.reference:
-                    try:
-                        replied_message = await message.channel.fetch_message(message.reference.message_id)
-                        await message.reply(embed=translateToEnglish(replied_message.content))
-                    except discord.errors.NotFound:
-                        await message.channel.send("The replied message could not be found.")
-                else:
-                    await message.reply("Please reply to a message to translate it.")
+                await translateFunction(message)
+            elif msg.startswith('!poll'):
+                await pollFunction(message)
             # No proper command detected -> respond with generic supporting message
             else:
                 await message.reply("I could not understand the command. \nPlease type ***!help*** to see everything I "
