@@ -1,6 +1,9 @@
 import asyncio
 
 import discord
+import datetime
+from discord.ext import commands
+from discord.ext.commands import CooldownMapping, BucketType
 from discord import Game, Status
 
 import config
@@ -9,9 +12,8 @@ from src.botFunctions import helpFunction, randomFact, randomQuote, pollFunction
 TOKEN = config.TOKEN
 
 intents = discord.Intents.all()
-client = discord.Client(intents=intents)
-
-userCoins = {"Jahy": 1000}
+client = commands.Bot(intents=intents, command_prefix='!')
+client.remove_command('help')
 
 
 @client.event
@@ -20,36 +22,49 @@ async def on_ready():
     print('Logged in as {0.user}'.format(client))
 
 
-@client.event
-async def on_message(message):
-    print(str(message.author) + ": " + str(message.content))
+cooldowns = CooldownMapping.from_cooldown(1, 600, BucketType.user)
 
-    if message.author == client.user:
-        return
-    else:
-        # Check if the message starts with '!'. Only check for content then.
-        if message.content.startswith('!'):
-            msg = message.content.lower()
-            # Help Function: Bot responds with embed that provides information on what the bot can do for each
-            # command entered
-            if msg.__eq__('!help'):
-                await message.reply(embed=helpFunction())
-            # Fact Function: Bot responds with a random fact
-            elif msg.__eq__('!fact'):
-                await message.reply(embed=randomFact())
-            # Quote Function: Bot responds with a random quote
-            elif msg.__eq__('!quote'):
-                await message.reply(embed=randomQuote())
-            # Translate Function: Bot translates the message that's been replied to and returns output in English
-            # Any language -> English (uses Google Translator API)
-            elif msg.__eq__('!translate'):
-                await translateFunction(message)
-            elif msg.startswith('!poll'):
-                await pollFunction(message)
-            # No proper command detected -> respond with generic supporting message
+
+@client.command()
+async def work(ctx):
+    if cooldowns.get_bucket(ctx.message).update_rate_limit():
+        retry_after = cooldowns.get_bucket(ctx.message).get_retry_after()
+        string_time = str(datetime.timedelta(seconds=retry_after)).split(":")
+        minutes = int(string_time[1])
+        seconds = int(string_time[2].split(".")[0])
+        if minutes < 10:
+            if minutes > 1:
+                await ctx.reply("You are currently on cooldown. Try again in " + str(minutes) + " minutes.")
             else:
-                await message.reply("I could not understand the command. \nPlease type ***!help*** to see everything I "
-                                    "can do and all the commands I can respond to.")
+                await ctx.reply("Your cooldown is almost over. Try again soon in about " + str(seconds) + " seconds.")
+    else:
+        # Perform work functionality
+        await ctx.reply("You have worked and earned some money!")
+
+
+@client.command()
+async def help(ctx):
+    await ctx.reply(embed=helpFunction())
+
+
+@client.command()
+async def fact(ctx):
+    await ctx.reply(embed=randomFact())
+
+
+@client.command()
+async def quote(ctx):
+    await ctx.reply(embed=randomQuote())
+
+
+@client.command()
+async def translate(ctx):
+    await translateFunction(ctx.message)
+
+
+@client.command()
+async def poll(ctx):
+    await pollFunction(ctx.message)
 
 
 async def run_bot():

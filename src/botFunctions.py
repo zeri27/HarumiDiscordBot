@@ -110,7 +110,7 @@ async def pollFunction(message):
     await message.add_reaction('❌')
 
     # Wait for 5 minutes
-    await asyncio.sleep(8)
+    await asyncio.sleep(300)
 
     # Get updated message with vote counts
     message = await message.channel.fetch_message(poll.id)
