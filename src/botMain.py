@@ -1,13 +1,11 @@
 import asyncio
-
+import config
 import discord
 import datetime
 from discord.ext import commands
-from discord.ext.commands import CooldownMapping, BucketType
 from discord import Game, Status
-
-import config
-from src.botFunctions import helpFunction, randomFact, randomQuote, pollFunction, translateFunction
+from discord.ext.commands import CooldownMapping, BucketType
+from src.botFunctions import helpFunction, randomFact, randomQuote, pollFunction, translateFunction, chatFunction
 
 TOKEN = config.TOKEN
 
@@ -65,6 +63,11 @@ async def translate(ctx):
 @client.command()
 async def poll(ctx):
     await pollFunction(ctx.message)
+
+
+@client.command()
+async def chat(ctx):
+    await chatFunction(ctx.message)
 
 
 async def run_bot():
