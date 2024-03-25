@@ -2,11 +2,14 @@ import asyncio
 import random
 import discord
 from googletrans import Translator
-from src.chatBotFunctions import generate_response
+from deep_translator import GoogleTranslator
+from chatBotFunctions import generate_response
 
 # Initiates the translater
+
 # Please note translator version is 4.0.0 as the current stable version 3.0.0 does not work properly
 translator = Translator()
+translator2 = GoogleTranslator(source='auto', target='en')
 
 # Reads the file and stores it in a list to be used when the randomFact() function is called
 with open('resources/randomfacts', 'r') as f:
@@ -91,12 +94,13 @@ async def translateFunction(message):
 
 
 def translateToEnglish(text):
-    translation = translator.translate(text, dest='en')
+    #translation = translator.translate(text, dest='en')
+    translation = translator2.translate(text)
     embed = discord.Embed(title="Harumi's Translation To English", color=colors['orange'])
     embed.add_field(name="Original Text:",
                     value=text, inline=False)
-    embed.add_field(name="Translated Text:",
-                    value=translation.text, inline=False)
+    #embed.add_field(name="Translated Text:", value=translation.text, inline=False)
+    embed.add_field(name="Translated Text:", value=translation, inline=False)
     return embed
 
 
@@ -114,6 +118,7 @@ def pollResults(question, ticks, cross):
 async def chatFunction(message):
     chat_input = message.content.split('!chat ')[1]
     chat_output = generate_response(chat_input)
+    #chat_output = "/ddtalk " + chat_output
     await message.reply(chat_output)
 
 
